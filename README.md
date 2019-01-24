@@ -26,6 +26,15 @@ Both examples above were run on a macbook pro **CPU** (i7, 2.5GHz, 16GB). Some f
 > Note: The code in this repo is written and tested with Tensorflow `1.4.0-rc0`. Using a different version may result in [some errors](https://github.com/tensorflow/models/issues/1581).
 You may need to [generate your own frozen model](https://pythonprogramming.net/testing-custom-object-detector-tensorflow-object-detection-api-tutorial/?completed=/training-custom-objects-tensorflow-object-detection-api-tutorial/) graph using the [model checkpoints](model-checkpoint) in the repo to fit your TF version.
 
+The tensorflow object detection repo has a [python file for exporting a checkpoint to frozen graph here](https://github.com/tensorflow/models/blob/master/research/object_detection/export_inference_graph.py).  You can copy it to the current directory and use it as follows
+
+```
+python3 export_inference_graph.py \
+    --input_type image_tensor \
+    --model-checkpoint/ssd_mobilenet_v1_pets.config \
+    --model-checkpoint/model.ckpt-200002 \ 
+    --output_directory hand_inference_graph
+```
 
 
 **Content of this document**
@@ -182,7 +191,8 @@ This work also served as an intense weekend crash course for me to learn Python 
 A few people have used the handtracking sample code/models in creating some awesome projects and I'd like to highlight them here!
 - (Alphabot)[https://github.com/drewgillson/alphabot]: a screen-less interactive spelling primer powered by computer vision
 - (Wall Z the Robot)[https://challengerocket.com/megatran/Wall-Z-the-Robot-8a34db.html]
-
+- (Predicting hand pose)[https://github.com/MrEliptik/HandPose] : Using the output of a hand detector to predict hand pose by Victor Meunier.
+- (Hand Tracking Pong)[https://github.com/alvinwan/hand-tracking-pong]: Hand Tracking ping pong.
 
 If you have created something cool, send me a note (or tweet) and I'll be happy to include it here!
 
