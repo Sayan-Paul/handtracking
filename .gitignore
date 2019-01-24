@@ -1,4 +1,7 @@
- 
+*.jpg
+object_detection/
+protos/*
+
 *.DS_Store
 # Byte-compiled / optimized / DLL files
 __pycache__/

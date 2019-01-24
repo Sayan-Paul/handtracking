@@ -35,13 +35,15 @@ def get_bbox_visualize(base_path, dir):
         base_path + dir + "/polygons.mat")
     # there are 100 of these per folder in the egohands dataset
     polygons = boxes["polygons"][0]
+
     # first = polygons[0]
     # print(len(first))
     pointindex = 0
 
+    label_list = dict()
+
     for first in polygons:
         index = 0
-
         font = cv2.FONT_HERSHEY_SIMPLEX
 
         img_id = image_path_array[pointindex]
@@ -58,7 +60,13 @@ def get_bbox_visualize(base_path, dir):
 
         boxarray = []
         csvholder = []
-        for pointlist in first:
+        for handtype in first.dtype.names:
+            pointlist = first[handtype]
+            label_type = "left" if "left" in handtype else "right"
+
+            if label_type not in label_list:
+                label_list[label_type] = set()
+
             pst = np.empty((0, 2), int)
             max_x = max_y = min_x = min_y = height = width = 0
 
@@ -87,10 +95,13 @@ def get_bbox_visualize(base_path, dir):
             hold['miny'] = min_y
             hold['maxx'] = max_x
             hold['maxy'] = max_y
+
+            label_list[label_type].add(tail)
+
             if (min_x > 0 and min_y > 0 and max_x > 0 and max_y > 0):
                 boxarray.append(hold)
                 labelrow = [tail,
-                            np.size(img, 1), np.size(img, 0), "hand", min_x, min_y, max_x, max_y]
+                            np.size(img, 1), np.size(img, 0), label_type, min_x, min_y, max_x, max_y]
                 csvholder.append(labelrow)
 
             cv2.polylines(img, [pst], True, (0, 255, 255), 1)
@@ -105,6 +116,7 @@ def get_bbox_visualize(base_path, dir):
             save_csv(csv_path + ".csv", csvholder)
             print("===== saving csv file for ", tail)
         cv2.waitKey(2)  # close window when a key press is detected
+    return label_list
 
 
 def create_directory(dir_path):
@@ -138,7 +150,7 @@ def generate_label_files(image_dir):
 
 
 # Split data, copy to train/test folders
-def split_data_test_eval_train(image_dir):
+def split_data_test_eval_train(image_dir, label_list):
     create_directory("images")
     create_directory("images/train")
     create_directory("images/test")
@@ -175,12 +187,18 @@ def split_data_test_eval_train(image_dir):
 
 
 def generate_csv_files(image_dir):
+    label_list = dict()
     for root, dirs, filenames in os.walk(image_dir):
         for dir in dirs:
-            get_bbox_visualize(image_dir, dir)
+            label_dir_list = get_bbox_visualize(image_dir, dir)
+            for label in label_dir_list:
+                if label not in label_list:
+                    label_list[label] = label_dir_list[label]
+                else:
+                    label_list[label].update(label_dir_list[label])
 
     print("CSV generation complete!\nGenerating train/test/eval folders")
-    split_data_test_eval_train("egohands/_LABELLED_SAMPLES/")
+    split_data_test_eval_train("egohands/_LABELLED_SAMPLES/", label_list)
 
 
 # rename image files so we can have them all in a train/test/eval folder.
@@ -201,6 +219,7 @@ def rename_files(image_dir):
 
     generate_csv_files("egohands/_LABELLED_SAMPLES/")
 
+
 def extract_folder(dataset_path):
     print("Egohands dataset already downloaded.\nGenerating CSV files")
     if not os.path.exists("egohands"):
@@ -210,6 +229,7 @@ def extract_folder(dataset_path):
         print("> Extraction complete")
         zip_ref.close()
         rename_files("egohands/_LABELLED_SAMPLES/")
+
 
 def download_egohands_dataset(dataset_url, dataset_path):
     is_downloaded = os.path.exists(dataset_path)
